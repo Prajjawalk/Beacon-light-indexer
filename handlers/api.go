@@ -14,7 +14,6 @@ import (
 	"github.com/Prajjawalk/beacon-light-indexer/types"
 	"github.com/Prajjawalk/beacon-light-indexer/utils"
 	"github.com/gin-gonic/gin"
-	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 )
 
@@ -34,19 +33,18 @@ func ApiEpoch(c *gin.Context) {
 	r := c.Request
 	w.Header().Set("Content-Type", "application/json")
 
-	vars := mux.Vars(r)
-
-	epoch, err := strconv.ParseInt(vars["epoch"], 10, 64)
-	if err != nil && vars["epoch"] != "latest" && vars["epoch"] != "finalized" {
+	epoch, err := strconv.ParseInt(c.Param("epoch"), 10, 64)
+	if err != nil && c.Param("epoch") != "latest" && c.Param("epoch") != "finalized" {
 		sendErrorResponse(c.Writer, c.Request.URL.String(), "invalid epoch provided")
 		return
 	}
 
-	if vars["epoch"] == "latest" {
+	if c.Param("epoch") == "latest" {
 		epoch = int64(services.LatestEpoch())
+		logger.Infof("epoch is: %v", epoch)
 	}
 
-	if vars["epoch"] == "finalized" {
+	if c.Param("epoch") == "finalized" {
 		epoch = int64(services.LatestFinalizedEpoch())
 	}
 
@@ -93,19 +91,18 @@ func ApiEpochSlots(c *gin.Context) {
 	w := c.Writer
 	r := c.Request
 	w.Header().Set("Content-Type", "application/json")
-	vars := mux.Vars(r)
 
-	epoch, err := strconv.ParseInt(vars["epoch"], 10, 64)
-	if err != nil && vars["epoch"] != "latest" && vars["epoch"] != "finalized" {
+	epoch, err := strconv.ParseInt(c.Param("epoch"), 10, 64)
+	if err != nil && c.Param("epoch") != "latest" && c.Param("epoch") != "finalized" {
 		sendErrorResponse(w, r.URL.String(), "invalid epoch provided")
 		return
 	}
 
-	if vars["epoch"] == "latest" {
+	if c.Param("epoch") == "latest" {
 		epoch = int64(services.LatestEpoch())
 	}
 
-	if vars["epoch"] == "finalized" {
+	if c.Param("epoch") == "finalized" {
 		epoch = int64(services.LatestFinalizedEpoch())
 	}
 
@@ -133,7 +130,7 @@ func ApiEpochSlots(c *gin.Context) {
 // @Tags Slot
 // @Description Returns a slot by its slot number or root hash or the latest slot with string latest
 // @Produce  json
-// @Param  slotOrHash path string true "Slot or root hash or the string latest"
+// @Param  slot path string true "Slot or root hash or the string latest"
 // @Success 200 {object} types.ApiResponse{data=types.APISlotResponse}
 // @Failure 400 {object} types.ApiResponse
 // @Router /api/v1/slot/{slotOrHash} [get]
@@ -142,14 +139,12 @@ func ApiSlots(c *gin.Context) {
 	r := c.Request
 	w.Header().Set("Content-Type", "application/json")
 
-	vars := mux.Vars(r)
-
-	slotOrHash := strings.Replace(vars["slotOrHash"], "0x", "", -1)
+	slotOrHash := strings.Replace(c.Param("slot"), "0x", "", -1)
 	blockSlot := int64(-1)
 	blockRootHash, err := hex.DecodeString(slotOrHash)
 	if slotOrHash != "latest" && (err != nil || len(slotOrHash) != 64) {
 		blockRootHash = []byte{}
-		blockSlot, err = strconv.ParseInt(vars["slotOrHash"], 10, 64)
+		blockSlot, err = strconv.ParseInt(c.Param("slot"), 10, 64)
 		if err != nil {
 			sendErrorResponse(w, r.URL.String(), "could not parse slot number")
 			return
@@ -241,15 +236,13 @@ func ApiSlotAttestations(c *gin.Context) {
 	r := c.Request
 	w.Header().Set("Content-Type", "application/json")
 
-	vars := mux.Vars(r)
-
-	slot, err := strconv.ParseInt(vars["slot"], 10, 64)
-	if err != nil && vars["slot"] != "latest" {
+	slot, err := strconv.ParseInt(c.Param("slot"), 10, 64)
+	if err != nil && c.Param("slot") != "latest" {
 		sendErrorResponse(w, r.URL.String(), "invalid block slot provided")
 		return
 	}
 
-	if vars["slot"] == "latest" {
+	if c.Param("slot") == "latest" {
 		slot = int64(services.LatestSlot())
 	}
 
@@ -289,7 +282,6 @@ func ApiSlotDeposits(c *gin.Context) {
 	r := c.Request
 	w.Header().Set("Content-Type", "application/json")
 
-	vars := mux.Vars(r)
 	q := r.URL.Query()
 
 	limitQuery := q.Get("limit")
@@ -313,7 +305,7 @@ func ApiSlotDeposits(c *gin.Context) {
 		limit = 100 + offset
 	}
 
-	slot, err := strconv.ParseInt(vars["slot"], 10, 64)
+	slot, err := strconv.ParseInt(c.Param("slot"), 10, 64)
 	if err != nil {
 		sendErrorResponse(w, r.URL.String(), "invalid block slot provided")
 		return
@@ -343,9 +335,7 @@ func ApiSlotProposerSlashings(c *gin.Context) {
 	r := c.Request
 	w.Header().Set("Content-Type", "application/json")
 
-	vars := mux.Vars(r)
-
-	slot, err := strconv.ParseInt(vars["slot"], 10, 64)
+	slot, err := strconv.ParseInt(c.Param("slot"), 10, 64)
 	if err != nil {
 		sendErrorResponse(w, r.URL.String(), "invalid block slot provided")
 		return
@@ -375,9 +365,7 @@ func ApiSlotVoluntaryExits(c *gin.Context) {
 	r := c.Request
 	w.Header().Set("Content-Type", "application/json")
 
-	vars := mux.Vars(r)
-
-	slot, err := strconv.ParseInt(vars["slot"], 10, 64)
+	slot, err := strconv.ParseInt(c.Param("slot"), 10, 64)
 	if err != nil {
 		sendErrorResponse(w, r.URL.String(), "invalid block slot provided")
 		return
@@ -406,9 +394,8 @@ func ApiSlotWithdrawals(c *gin.Context) {
 	w := c.Writer
 	r := c.Request
 	w.Header().Set("Content-Type", "application/json")
-	vars := mux.Vars(r)
 
-	slot, err := strconv.ParseInt(vars["slot"], 10, 64)
+	slot, err := strconv.ParseInt(c.Param("slot"), 10, 64)
 	if err != nil {
 		sendErrorResponse(w, r.URL.String(), "invalid block slot provided")
 		return
@@ -437,9 +424,7 @@ func ApiSlotAttesterSlashings(c *gin.Context) {
 	r := c.Request
 	w.Header().Set("Content-Type", "application/json")
 
-	vars := mux.Vars(r)
-
-	slot, err := strconv.ParseInt(vars["slot"], 10, 64)
+	slot, err := strconv.ParseInt(c.Param("slot"), 10, 64)
 	if err != nil {
 		sendErrorResponse(w, r.URL.String(), "invalid block slot provided")
 		return
@@ -453,6 +438,56 @@ func ApiSlotAttesterSlashings(c *gin.Context) {
 	defer rows.Close()
 
 	returnQueryResultsAsArray(rows, w, r)
+}
+
+func ApiGlobalParticipationRate(c *gin.Context) {
+	w := c.Writer
+	r := c.Request
+	w.Header().Set("Content-Type", "application/json")
+
+	var globalParticipationRate float32
+	row := db.IndexerDb.QueryRow("SELECT AVG(globalparticipationrate) from epochs;")
+	if row != nil {
+		err := row.Scan(&globalParticipationRate)
+		if err != nil {
+			sendErrorResponse(w, r.URL.String(), "could not fetch globalParticipationRate from database")
+		}
+	}
+
+	j := json.NewEncoder(w)
+
+	sendOKResponse(j, r.URL.String(), []interface{}{struct{ globalParticipationRate float32 }{
+		globalParticipationRate: globalParticipationRate * float32(100),
+	}})
+}
+
+func ApiValidatorParticipationRate(c *gin.Context) {
+	w := c.Writer
+	r := c.Request
+	w.Header().Set("Content-Type", "application/json")
+
+	index, err := strconv.ParseInt(c.Param("validator_index"), 10, 64)
+	if err != nil {
+		sendErrorResponse(w, r.URL.String(), "invalid block slot provided")
+		return
+	}
+
+	var totalMissedAttestations uint64
+	var epoch uint64
+	row := db.IndexerDb.QueryRow("SELECT missedattestations, latest_epoch from validator_missed_attestations where validatorindex = $1;", index)
+	if row != nil {
+		err := row.Scan(&totalMissedAttestations, &epoch)
+		if err != nil {
+			sendErrorResponse(w, r.URL.String(), "could not fetch validator participation rate from database")
+		}
+	}
+
+	validatorParticipationRate := float32(1) - float32(totalMissedAttestations/(epoch*utils.Config.Chain.SlotsPerEpoch))
+
+	j := json.NewEncoder(w)
+	sendOKResponse(j, r.URL.String(), []interface{}{struct{ validatorParticipationRate float32 }{
+		validatorParticipationRate: validatorParticipationRate * float32(100),
+	}})
 }
 
 func returnQueryResults(rows *sql.Rows, w http.ResponseWriter, r *http.Request, adjustQueryEntriesFuncs ...func(map[string]interface{}) error) {

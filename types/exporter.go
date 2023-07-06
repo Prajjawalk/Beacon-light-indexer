@@ -214,3 +214,9 @@ type Withdrawals struct {
 	Address        []byte `json:"address"`
 	Amount         uint64 `json:"amount"`
 }
+
+type ValidatorMissedAttestationsStatistic struct {
+	Index              uint64
+	MissedAttestations uint64
+	Epoch              uint64
+}

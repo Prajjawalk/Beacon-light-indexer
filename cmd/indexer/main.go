@@ -12,6 +12,7 @@ import (
 	"github.com/Prajjawalk/beacon-light-indexer/exporter"
 	"github.com/Prajjawalk/beacon-light-indexer/handlers"
 	"github.com/Prajjawalk/beacon-light-indexer/rpc"
+	"github.com/Prajjawalk/beacon-light-indexer/services"
 	"github.com/Prajjawalk/beacon-light-indexer/types"
 	"github.com/Prajjawalk/beacon-light-indexer/utils"
 	"github.com/gin-gonic/gin"
@@ -68,23 +69,23 @@ func main() {
 
 	go exporter.Start(rpcClient)
 
-	// services.Init()
+	services.Init()
 
 	router := gin.Default()
 
 	apiV1Router := router.Group("/api/v1")
 	router.GET("/api/v1/docs/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
-	apiV1Router.GET("/epoch/{epoch}", handlers.ApiEpoch)
-
-	apiV1Router.GET("/epoch/{epoch}/blocks", handlers.ApiEpochSlots)
-	apiV1Router.GET("/epoch/{epoch}/slots", handlers.ApiEpochSlots)
-	apiV1Router.GET("/slot/{slotOrHash}", handlers.ApiSlots)
-	apiV1Router.GET("/slot/{slot}/attestations", handlers.ApiSlotAttestations)
-	apiV1Router.GET("/slot/{slot}/deposits", handlers.ApiSlotDeposits)
-	apiV1Router.GET("/slot/{slot}/attesterslashings", handlers.ApiSlotAttesterSlashings)
-	apiV1Router.GET("/slot/{slot}/proposerslashings", handlers.ApiSlotProposerSlashings)
-	apiV1Router.GET("/slot/{slot}/voluntaryexits", handlers.ApiSlotVoluntaryExits)
-	apiV1Router.GET("/slot/{slot}/withdrawals", handlers.ApiSlotWithdrawals)
+	apiV1Router.GET("/epoch/:epoch", handlers.ApiEpoch)
+	apiV1Router.GET("/epoch/:epoch/slots", handlers.ApiEpochSlots)
+	apiV1Router.GET("/slot/:slot", handlers.ApiSlots)
+	apiV1Router.GET("/slot/:slot/attestations", handlers.ApiSlotAttestations)
+	apiV1Router.GET("/slot/:slot/deposits", handlers.ApiSlotDeposits)
+	apiV1Router.GET("/slot/:slot/attesterslashings", handlers.ApiSlotAttesterSlashings)
+	apiV1Router.GET("/slot/:slot/proposerslashings", handlers.ApiSlotProposerSlashings)
+	apiV1Router.GET("/slot/:slot/voluntaryexits", handlers.ApiSlotVoluntaryExits)
+	apiV1Router.GET("/slot/:slot/withdrawals", handlers.ApiSlotWithdrawals)
+	apiV1Router.GET("/participationrate/validator/:validator_index", handlers.ApiValidatorParticipationRate)
+	apiV1Router.GET("/participationrate/global", handlers.ApiGlobalParticipationRate)
 
 	s := &http.Server{
 		Addr:           utils.Config.Server.Host + ":" + utils.Config.Server.Port,

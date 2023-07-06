@@ -670,8 +670,6 @@ func (beacon *BeaconClient) GetSyncCommittee(stateID string, epoch uint64) (*Sta
 // GetValidatorParticipation will get the validator participation from the Beacon RPC api
 func (beacon *BeaconClient) GetValidatorParticipation(epoch uint64, validatorData []*types.Validator) (*types.ValidatorParticipation, error) {
 	if BeaconLatestHeadEpoch == 0 || epoch >= BeaconLatestHeadEpoch-1 {
-		// update BeaconLatestHeadEpoch to make sure we are continuing with the latest data
-		// we need to check when epoch = head and epoch head - 1 so our following logic acts correctly when we are close to the head
 		head, err := beacon.GetChainHead()
 		if err != nil {
 			return nil, err
@@ -690,78 +688,52 @@ func (beacon *BeaconClient) GetValidatorParticipation(epoch uint64, validatorDat
 	}
 
 	request_epoch := epoch
-	if epoch < BeaconLatestHeadEpoch-1 {
-		request_epoch += 1
-	}
-
 	startingSlot := request_epoch * utils.Config.Chain.SlotsPerEpoch
 	endingSlot := startingSlot + utils.Config.Chain.SlotsPerEpoch
 	totalVotes := uint64(0)
 	totalEffectiveBalance := uint64(0)
 	totalVotedBalance := uint64(0)
-	var m sync.Mutex
-	var wg sync.WaitGroup
-	for slotNumber := startingSlot; slotNumber <= endingSlot; slotNumber++ {
-		wg.Add(1)
-		go func(slotNumber uint64, m *sync.Mutex, wg *sync.WaitGroup) {
-			defer wg.Done()
-			resp, err := beacon.get(fmt.Sprintf("%s/eth/v1/beacon/blocks/%d/attestations", beacon.endpoint, slotNumber))
-			if err != nil {
-				logger.Errorf("error retrieving attestations data for slot %v: %v", slotNumber, err)
-				// continue
-				return
-			}
+	totalValidators := uint64(0)
+	totalParticipatingValidators := uint64(0)
 
-			var parsedResp BlockAttestationResponse
-			err = json.Unmarshal(resp, &parsedResp)
-			if err != nil {
-				logger.Errorf("error parsing attestations data for slot %v: %v", slotNumber, err)
-				// continue
-				return
-			}
-
-			for _, attestation := range parsedResp.Data {
-				if attestation.AggregationBits == "" {
-					continue
-				}
-				// Decode the attestation data
-				decodedData, err := hexutil.Decode(attestation.AggregationBits)
-				if err != nil {
-					logger.Errorf("Error decoding attestation data: %v\n", err)
-					continue
-				}
-
-				// Count the votes
-				voteCount := countVotes(decodedData)
-				m.Lock()
-				totalVotes += voteCount
-				m.Unlock()
-			}
-
-			votedBalance := validatorData[0].EffectiveBalance
-			totalVotedBalance += totalVotes * (votedBalance)
-
-			for _, validators := range validatorData {
-				if validators.EffectiveBalance == 0 {
-					continue
-				}
-				effectiveBalance := validators.EffectiveBalance
-				if err != nil {
-					logger.Errorf("Error parsing effective balance of validator %v: %v", validators.Index, err)
-				}
-
-				m.Lock()
-				totalEffectiveBalance += effectiveBalance
-				m.Unlock()
-			}
-		}(slotNumber, &m, &wg)
+	resp, err := beacon.get(fmt.Sprintf("%s/eth/v1/beacon/blocks/%d/attestations", beacon.endpoint, endingSlot))
+	if err != nil {
+		logger.Errorf("error retrieving attestations data for slot %v: %v", endingSlot, err)
+		return nil, err
 	}
 
-	wg.Wait()
+	var parsedResp BlockAttestationResponse
+	err = json.Unmarshal(resp, &parsedResp)
+	if err != nil {
+		logger.Errorf("error parsing attestations data for slot %v: %v", endingSlot, err)
+		// continue
+		return nil, err
+	}
+
+	for _, attestation := range parsedResp.Data {
+		if attestation.AggregationBits == "" {
+			continue
+		}
+		// Decode the attestation data
+		decodedData, err := hexutil.Decode(attestation.AggregationBits)
+		if err != nil {
+			logger.Errorf("Error decoding attestation data: %v\n", err)
+			continue
+		}
+
+		totalParticipatingValidators += countParticipation(decodedData)
+		totalVotes += 1
+
+	}
+
+	votedBalance := validatorData[0].EffectiveBalance
+	totalVotedBalance += totalVotes * (votedBalance)
+	totalEffectiveBalance += validatorData[0].EffectiveBalance * uint64(len(validatorData))
+	totalValidators += uint64(len(validatorData))
 
 	res := &types.ValidatorParticipation{
 		Epoch:                   epoch,
-		GlobalParticipationRate: float32(totalVotedBalance) / float32(totalEffectiveBalance),
+		GlobalParticipationRate: float32(totalParticipatingValidators) / float32(totalValidators),
 		VotedEther:              totalVotedBalance,
 		EligibleEther:           totalEffectiveBalance,
 	}
@@ -769,8 +741,60 @@ func (beacon *BeaconClient) GetValidatorParticipation(epoch uint64, validatorDat
 	return res, nil
 }
 
-// countVotes counts the number of votes in the given attestation data
-func countVotes(data []byte) uint64 {
+func (beacon *BeaconClient) GetValidatorMissedAttestationsCount(validators []*types.Validator, epoch uint64) (map[uint64]*types.ValidatorMissedAttestationsStatistic, error) {
+	currentEpoch := epoch
+	validatorMissedAttestationStats := make(map[uint64]*types.ValidatorMissedAttestationsStatistic)
+	for _, validator := range validators {
+		validatorMissedAttestationStats[validator.Index] = &types.ValidatorMissedAttestationsStatistic{
+			Index:              validator.Index,
+			MissedAttestations: 32,
+			Epoch:              currentEpoch,
+		}
+	}
+	// Iterate through the blocks of the current epoch
+	for epochSlot := currentEpoch * 32; epochSlot < (currentEpoch+1)*32; epochSlot++ {
+		// Fetch the block data
+		resp, err := beacon.get(fmt.Sprintf("%s/eth/v1/beacon/blocks/%d/attestations", beacon.endpoint, epochSlot))
+		if err != nil {
+			logger.Errorf("error retrieving attestations data for slot %v: %v", epochSlot, err)
+
+			for idx := range validatorMissedAttestationStats {
+				if validatorMissedAttestationStats[idx].MissedAttestations > uint64(0) {
+					validatorMissedAttestationStats[idx].MissedAttestations -= 1
+				}
+			}
+			continue
+		}
+
+		var parsedResp BlockAttestationResponse
+		err = json.Unmarshal(resp, &parsedResp)
+		if err != nil {
+			logger.Errorf("error parsing attestations data for slot %v: %v", epochSlot, err)
+			for idx := range validatorMissedAttestationStats {
+				if validatorMissedAttestationStats[idx].MissedAttestations > uint64(0) {
+					validatorMissedAttestationStats[idx].MissedAttestations -= 1
+				}
+			}
+			continue
+		}
+
+		// Iterate through the attestations in the block and count missed attestations
+		for _, attestation := range parsedResp.Data {
+			idx, err := strconv.ParseUint(attestation.Data.Index, 10, 32)
+			if err != nil {
+				continue
+			}
+			if validatorMissedAttestationStats[idx].MissedAttestations > uint64(0) {
+				validatorMissedAttestationStats[idx].MissedAttestations -= 1
+			}
+		}
+	}
+
+	return validatorMissedAttestationStats, nil
+}
+
+// countParticipation counts the number of validators participated in the given attestation data
+func countParticipation(data []byte) uint64 {
 	voteCount := uint64(0)
 	for _, vote := range data {
 		voteCount += uint64(vote)

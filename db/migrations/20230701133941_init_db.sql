@@ -2,98 +2,12 @@
 -- +goose StatementBegin
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
-CREATE TABLE IF NOT EXISTS
-    validators (
+CREATE TABLE IF NOT EXISTS 
+    validator_missed_attestations (
         validatorindex INT NOT NULL,
-        pubkey bytea NOT NULL,
-        pubkeyhex TEXT NOT NULL DEFAULT '',
-        withdrawableepoch BIGINT NOT NULL,
-        withdrawalcredentials bytea NOT NULL,
-        balance BIGINT NOT NULL,
-        balanceactivation BIGINT,
-        effectivebalance BIGINT NOT NULL,
-        slashed bool NOT NULL,
-        activationeligibilityepoch BIGINT NOT NULL,
-        activationepoch BIGINT NOT NULL,
-        exitepoch BIGINT NOT NULL,
-        lastattestationslot BIGINT,
-        status VARCHAR(20) NOT NULL DEFAULT '',
+        latest_epoch INT NOT NULL,
+        missedattestations INT NOT NULL,
         PRIMARY KEY (validatorindex)
-    );
-
-CREATE INDEX IF NOT EXISTS idx_validators_pubkey ON validators (pubkey);
-
-CREATE INDEX IF NOT EXISTS idx_validators_pubkeyhex ON validators (pubkeyhex);
-
-CREATE INDEX IF NOT EXISTS idx_validators_pubkeyhex_pattern_pos ON validators (pubkeyhex varchar_pattern_ops);
-
-CREATE INDEX IF NOT EXISTS idx_validators_status ON validators (status);
-
-CREATE INDEX IF NOT EXISTS idx_validators_balanceactivation ON validators (balanceactivation);
-
-CREATE INDEX IF NOT EXISTS idx_validators_activationepoch ON validators (activationepoch);
-
-CREATE INDEX IF NOT EXISTS validators_is_offline_vali_idx ON validators (validatorindex, lastattestationslot, pubkey);
-
-CREATE INDEX IF NOT EXISTS idx_validators_withdrawalcredentials ON validators (withdrawalcredentials, validatorindex);
-
-CREATE TABLE IF NOT EXISTS
-    validator_set (
-        epoch INT NOT NULL,
-        validatorindex INT NOT NULL,
-        withdrawableepoch BIGINT NOT NULL,
-        withdrawalcredentials bytea NOT NULL,
-        effectivebalance BIGINT NOT NULL,
-        slashed bool NOT NULL,
-        activationeligibilityepoch BIGINT NOT NULL,
-        activationepoch BIGINT NOT NULL,
-        exitepoch BIGINT NOT NULL,
-        PRIMARY KEY (validatorindex, epoch)
-    );
-
-CREATE TABLE IF NOT EXISTS
-    validator_stats (
-        validatorindex INT NOT NULL,
-        DAY INT NOT NULL,
-        start_balance BIGINT,
-        end_balance BIGINT,
-        min_balance BIGINT,
-        max_balance BIGINT,
-        start_effective_balance BIGINT,
-        end_effective_balance BIGINT,
-        min_effective_balance BIGINT,
-        max_effective_balance BIGINT,
-        missed_attestations INT,
-        orphaned_attestations INT,
-        participated_sync INT,
-        missed_sync INT,
-        orphaned_sync INT,
-        proposed_blocks INT,
-        missed_blocks INT,
-        orphaned_blocks INT,
-        attester_slashings INT,
-        proposer_slashings INT,
-        deposits INT,
-        deposits_amount BIGINT,
-        withdrawals INT,
-        withdrawals_amount BIGINT,
-        cl_rewards_gwei BIGINT,
-        cl_rewards_gwei_total BIGINT,
-        el_rewards_wei DECIMAL,
-        el_rewards_wei_total DECIMAL,
-        mev_rewards_wei DECIMAL,
-        mev_rewards_wei_total DECIMAL,
-        PRIMARY KEY (validatorindex, DAY)
-    );
-
-CREATE INDEX IF NOT EXISTS idx_validator_stats_day ON validator_stats (DAY);
-
-CREATE TABLE IF NOT EXISTS
-    validator_stats_status (
-        DAY INT NOT NULL,
-        status BOOLEAN NOT NULL,
-        income_exported BOOLEAN NOT NULL DEFAULT FALSE,
-        PRIMARY KEY (DAY)
     );
 
 CREATE TABLE IF NOT EXISTS

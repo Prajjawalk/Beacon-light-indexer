@@ -9,7 +9,7 @@ type Config struct {
 		Port     string `yaml:"port"`
 	} `yaml:"indexerDatabase"`
 	BeaconNodeUrl string `yaml:"beaconnodeUrl"`
-	IndexBlocks   bool
+	IndexBlocks   bool   `yaml:"indexBlocks"`
 	Chain         struct {
 		Name                       string `yaml:"name"`
 		GenesisTimestamp           uint64 `yaml:"genesisTimestamp"`
