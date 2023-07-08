@@ -27,7 +27,7 @@ $ ./main --config {path_to_config}
 ```
 
 ### API definitions 
-- The API specifications are listed in the Swagger doc which can be viewed in the form of UI once the server starts at path - http://<host>:<port>/api/v1/docs/index.html
+- The API specifications are listed in the Swagger doc which can be viewed in the form of UI once the server starts at path - http://{host}:{port}/api/v1/docs/index.html
   
 ### Code schema and directory structure
 ```
