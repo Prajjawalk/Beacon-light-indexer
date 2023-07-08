@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/Prajjawalk/beacon-light-indexer/db"
+	_ "github.com/Prajjawalk/beacon-light-indexer/docs"
 	"github.com/Prajjawalk/beacon-light-indexer/services"
 	"github.com/Prajjawalk/beacon-light-indexer/types"
 	"github.com/Prajjawalk/beacon-light-indexer/utils"
@@ -126,7 +127,7 @@ func ApiEpochSlots(c *gin.Context) {
 // @Summary Get the global participation rate
 // @Description Returns the global participation rate upto the latest head epoch
 // @Produce  json
-// @Success 200 {object} types.ApiResponse{data=type globalParticipationRateResp struct {ParticipationRate float32}}
+// @Success 200 {object} types.ApiResponse{data=types.GlobalParticipationRateResp}
 // @Failure 400 {object} types.ApiResponse
 // @Router /api/v1/participationrate/global [get]
 func ApiGlobalParticipationRate(c *gin.Context) {
@@ -143,13 +144,10 @@ func ApiGlobalParticipationRate(c *gin.Context) {
 		}
 	}
 
-	type globalParticipationRateResp struct {
-		ParticipationRate float32
-	}
 	j := json.NewEncoder(w)
 	response := &types.ApiResponse{}
 	response.Status = "OK"
-	response.Data = &globalParticipationRateResp{
+	response.Data = &types.GlobalParticipationRateResp{
 		ParticipationRate: globalParticipationRate * 100,
 	}
 
@@ -160,7 +158,7 @@ func ApiGlobalParticipationRate(c *gin.Context) {
 // @Description Returns the participation rate of the individual validator upto the latest head epoch
 // @Param  validator_index path string true "Index"
 // @Produce  json
-// @Success 200 {object} types.ApiResponse{data=type validatorParticipationrateResp struct {ParticipationRate float32 Index uint64}}
+// @Success 200 {object} types.ApiResponse{data=types.ValidatorParticipationrateResp}
 // @Failure 400 {object} types.ApiResponse
 // @Router /api/v1/participationrate/validator/:validator_index [get]
 func ApiValidatorParticipationRate(c *gin.Context) {
@@ -187,13 +185,9 @@ func ApiValidatorParticipationRate(c *gin.Context) {
 
 	validatorParticipationRate := float32(1) - float32(float32(totalMissedAttestations)/float32(epoch*utils.Config.Chain.SlotsPerEpoch))
 
-	type validatorParticipationrateResp struct {
-		ParticipationRate float32
-		Index             uint64
-	}
 	response := &types.ApiResponse{}
 	response.Status = "OK"
-	response.Data = &validatorParticipationrateResp{
+	response.Data = &types.ValidatorParticipationrateResp{
 		ParticipationRate: validatorParticipationRate * 100,
 		Index:             uint64(index),
 	}

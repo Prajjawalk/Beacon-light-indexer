@@ -1,0 +1,269 @@
+definitions:
+  types.APIEpochResponse:
+    properties:
+      attestationscount:
+        type: integer
+      attesterslashingscount:
+        type: integer
+      averagevalidatorbalance:
+        type: integer
+      blockscount:
+        type: integer
+      depositscount:
+        type: integer
+      eligibleether:
+        type: integer
+      epoch:
+        type: integer
+      finalized:
+        type: boolean
+      globalparticipationrate:
+        type: integer
+      missedblocks:
+        type: integer
+      orphanedblocks:
+        type: integer
+      proposedblocks:
+        type: integer
+      proposerslashingscount:
+        type: integer
+      rewards_exported:
+        type: integer
+      scheduledblocks:
+        type: integer
+      totalvalidatorbalance:
+        type: integer
+      ts:
+        type: integer
+      validatorscount:
+        type: integer
+      voluntaryexitscount:
+        type: integer
+      votedether:
+        type: integer
+      withdrawalcount:
+        type: integer
+    type: object
+  types.APISlotResponse:
+    properties:
+      attestationscount:
+        type: integer
+      attesterslashingscount:
+        type: integer
+      blockroot:
+        type: string
+      depositscount:
+        type: integer
+      epoch:
+        type: integer
+      eth1data_blockhash:
+        type: string
+      eth1data_depositcount:
+        type: integer
+      eth1data_depositroot:
+        type: string
+      exec_base_fee_per_gas:
+        type: integer
+        x-nullable: true
+      exec_block_hash:
+        type: string
+        x-nullable: true
+      exec_block_number:
+        type: integer
+        x-nullable: true
+      exec_extra_data:
+        type: string
+        x-nullable: true
+      exec_fee_recipient:
+        type: string
+        x-nullable: true
+      exec_gas_limit:
+        type: integer
+        x-nullable: true
+      exec_gas_used:
+        type: integer
+        x-nullable: true
+      exec_logs_bloom:
+        type: string
+        x-nullable: true
+      exec_parent_hash:
+        type: string
+        x-nullable: true
+      exec_random:
+        type: string
+        x-nullable: true
+      exec_receipts_root:
+        type: string
+        x-nullable: true
+      exec_state_root:
+        type: string
+        x-nullable: true
+      exec_timestamp:
+        type: integer
+        x-nullable: true
+      exec_transactions_count:
+        type: integer
+        x-nullable: true
+      graffiti:
+        type: string
+      graffiti_text:
+        type: string
+      parentroot:
+        type: string
+      proposer:
+        type: integer
+      proposerslashingscount:
+        type: integer
+      randaoreveal:
+        type: string
+      signature:
+        type: string
+      slot:
+        type: integer
+      stateroot:
+        type: string
+      status:
+        type: string
+      syncaggregate_bits:
+        type: string
+      syncaggregate_participation:
+        type: number
+      syncaggregate_signature:
+        type: string
+      voluntaryexitscount:
+        type: integer
+      withdrawalcount:
+        type: integer
+    type: object
+  types.ApiResponse:
+    properties:
+      data: {}
+      status:
+        type: string
+    type: object
+  types.GlobalParticipationRateResp:
+    properties:
+      participationRate:
+        type: number
+    type: object
+  types.ValidatorParticipationrateResp:
+    properties:
+      index:
+        type: integer
+      participationRate:
+        type: number
+    type: object
+info:
+  contact: {}
+paths:
+  /api/v1/epoch/{epoch}:
+    get:
+      description: Returns information for a specified epoch by the epoch number or
+        an epoch tag (can be latest or finalized)
+      parameters:
+      - description: Epoch number, the string latest or the string finalized
+        in: path
+        name: epoch
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            allOf:
+            - $ref: '#/definitions/types.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/types.APIEpochResponse'
+              type: object
+        "400":
+          description: Failure
+          schema:
+            $ref: '#/definitions/types.ApiResponse'
+        "500":
+          description: Server Error
+          schema:
+            $ref: '#/definitions/types.ApiResponse'
+      summary: Get epoch by number, latest, finalized
+      tags:
+      - Epoch
+  /api/v1/epoch/{epoch}/slots:
+    get:
+      description: Returns all slots for a specified epoch
+      parameters:
+      - description: Epoch number, the string latest or string finalized
+        in: path
+        name: epoch
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/types.ApiResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/types.APISlotResponse'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.ApiResponse'
+      summary: Get epoch blocks by epoch number, latest or finalized
+      tags:
+      - Epoch
+  /api/v1/participationrate/global:
+    get:
+      description: Returns the global participation rate upto the latest head epoch
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/types.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/types.GlobalParticipationRateResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.ApiResponse'
+      summary: Get the global participation rate
+  /api/v1/participationrate/validator/:validator_index:
+    get:
+      description: Returns the participation rate of the individual validator upto
+        the latest head epoch
+      parameters:
+      - description: Index
+        in: path
+        name: validator_index
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/types.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/types.ValidatorParticipationrateResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.ApiResponse'
+      summary: Get the validator participation rate
+swagger: "2.0"
