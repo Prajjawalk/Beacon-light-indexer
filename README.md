@@ -26,6 +26,9 @@ $ go build cmd/indexer/main.go
 $ ./main --config {path_to_config}
 ```
 
+### API definitions 
+- The API specifications are listed in the Swagger doc which can be viewed in the form of UI once the server starts at path - http://<host>:<port>/api/v1/docs/index.html
+  
 ### Code schema and directory structure
 ```
 .
@@ -65,3 +68,13 @@ $ ./main --config {path_to_config}
 └── utils
     └── utils.go
 ```
+
+- cache - This folder stores all the utility functions for initializing local indexer cache data and operating on it.
+- cmd - The entry file for the indexer and functions for database schema migrations
+- db - Functions related to database operations and saving epoch data are in this directory
+- docs - Directory containing swagger documentation
+- exporter - Directory containing functions to export and save epoch data, block data, validator missed attestation data to database
+- rpc - Functions to interact with beacon RPC client are listed in this folder
+- services - This directory contains schedulers which periodically updates latest block and epoch data in indexer cache
+- types - Directory containing type definitions of various structures used throughout the code
+- utils - Directory for utilities functions
