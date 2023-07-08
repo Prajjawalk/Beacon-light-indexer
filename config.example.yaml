@@ -1,0 +1,22 @@
+# Database credentials
+indexerDatabase:
+  user: <username>
+  name: <dbname>
+  host: <host>
+  port: <port>
+chain:
+  name: <chain-name>
+  genesisTimestamp: 
+  genesisValidatorsRoot: 
+  domainBLSToExecutionChange:
+  domainVoluntaryExit: 
+  slotsPerEpoch: 
+  secondsPerSlot: 
+  depositChainId: 
+  altairForkEpoch: 
+  syncCommitteeSize: 
+beaconnodeUrl:
+indexBlocks: false
+server:
+  host: "localhost"
+  port: "8080"
