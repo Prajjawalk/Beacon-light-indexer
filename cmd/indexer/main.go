@@ -77,13 +77,6 @@ func main() {
 	router.GET("/api/v1/docs/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 	apiV1Router.GET("/epoch/:epoch", handlers.ApiEpoch)
 	apiV1Router.GET("/epoch/:epoch/slots", handlers.ApiEpochSlots)
-	apiV1Router.GET("/slot/:slot", handlers.ApiSlots)
-	apiV1Router.GET("/slot/:slot/attestations", handlers.ApiSlotAttestations)
-	apiV1Router.GET("/slot/:slot/deposits", handlers.ApiSlotDeposits)
-	apiV1Router.GET("/slot/:slot/attesterslashings", handlers.ApiSlotAttesterSlashings)
-	apiV1Router.GET("/slot/:slot/proposerslashings", handlers.ApiSlotProposerSlashings)
-	apiV1Router.GET("/slot/:slot/voluntaryexits", handlers.ApiSlotVoluntaryExits)
-	apiV1Router.GET("/slot/:slot/withdrawals", handlers.ApiSlotWithdrawals)
 	apiV1Router.GET("/participationrate/validator/:validator_index", handlers.ApiValidatorParticipationRate)
 	apiV1Router.GET("/participationrate/global", handlers.ApiGlobalParticipationRate)
 

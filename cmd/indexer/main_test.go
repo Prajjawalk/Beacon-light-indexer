@@ -6,9 +6,8 @@ func Test_main(t *testing.T) {
 	tests := []struct {
 		name string
 	}{
-		// TODO: Add test cases.
 		{
-			name: "ok",
+			name: "ok run test",
 		},
 	}
 	for _, tt := range tests {
