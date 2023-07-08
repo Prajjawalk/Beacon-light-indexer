@@ -71,10 +71,10 @@ $ ./main --config {path_to_config}
 
 - cache - This folder stores all the utility functions for initializing local indexer cache data and operating on it.
 - cmd - The entry file for the indexer and functions for database schema migrations
-- db - Functions related to database operations and saving epoch data are in this directory
+- db - Functions related to database operations and saving epoch data are in this directory. The database used for this indexer is PostgreSQL because of its relational design which makes it a lot easier to store a combination of structured data and unstructured data in binary raw format.
 - docs - Directory containing swagger documentation
 - exporter - Directory containing functions to export and save epoch data, block data, validator missed attestation data to database
 - rpc - Functions to interact with beacon RPC client are listed in this folder
-- services - This directory contains schedulers which periodically updates latest block and epoch data in indexer cache
+- services - This directory contains schedulers that periodically updates the latest block and epoch data in the indexer cache
 - types - Directory containing type definitions of various structures used throughout the code
-- utils - Directory for utilities functions
+- utils - Directory for utility functions
