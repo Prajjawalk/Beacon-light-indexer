@@ -31,7 +31,7 @@ $ ./main --config {path_to_config}
   
 ### Code schema and directory structure
 ```
-.
+├── README.md
 ├── cache
 │   └── cache.go
 ├── cmd
@@ -40,6 +40,7 @@ $ ./main --config {path_to_config}
 │   │   └── main_test.go
 │   └── migrations
 │       └── postgres.go
+├── config.example.yaml
 ├── config.yaml
 ├── db
 │   ├── db.go
@@ -56,9 +57,9 @@ $ ./main --config {path_to_config}
 ├── handlers
 │   ├── api.go
 │   └── api_test.go
-├── main
 ├── rpc
-│   └── beacon.go
+│   ├── beacon.go
+│   └── beacon_test.go
 ├── services
 │   └── services.go
 ├── types
