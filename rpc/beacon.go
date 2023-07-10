@@ -89,7 +89,7 @@ func (beacon *BeaconClient) GetChainHead() (*types.ChainHead, error) {
 	}, nil
 }
 
-// GetEpochAssignments will get the epoch assignments from Lighthouse RPC api
+// GetEpochAssignments will get the epoch assignments from Beacon RPC api
 func (beacon *BeaconClient) GetEpochAssignments(epoch uint64) (*types.EpochAssignments, error) {
 	beacon.assignmentsCacheMux.Lock()
 	defer beacon.assignmentsCacheMux.Unlock()
@@ -185,7 +185,7 @@ func (beacon *BeaconClient) GetEpochAssignments(epoch uint64) (*types.EpochAssig
 	return assignments, nil
 }
 
-// GetEpochData will get the epoch data from Lighthouse RPC api
+// GetEpochData will get the epoch data from Beacon RPC api
 func (beacon *BeaconClient) GetEpochData(epoch uint64, skipHistoricBalances bool) (*types.EpochData, error) {
 	wg := &sync.WaitGroup{}
 	mux := &sync.Mutex{}
@@ -338,7 +338,7 @@ func (beacon *BeaconClient) GetEpochData(epoch uint64, skipHistoricBalances bool
 	return data, nil
 }
 
-// GetBlocksBySlot will get the blocks by slot from Lighthouse RPC api
+// GetBlocksBySlot will get the blocks by slot from Beacon RPC api
 func (beacon *BeaconClient) GetBlocksBySlot(slot uint64) ([]*types.Block, error) {
 	var parsedHeaders *StandardBeaconHeaderResponse
 
@@ -506,8 +506,7 @@ func (beacon *BeaconClient) blockFromResponse(parsedHeaders *StandardBeaconHeade
 		}
 	}
 
-	// TODO: this is legacy from old lighthouse API. Does it even still apply?
-	if block.Eth1Data.DepositCount > 2147483647 { // Sometimes the lighthouse node does return bogus data for the DepositCount value
+	if block.Eth1Data.DepositCount > 2147483647 {
 		block.Eth1Data.DepositCount = 0
 	}
 

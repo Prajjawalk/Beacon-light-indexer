@@ -64,7 +64,7 @@ func main() {
 	chainIDBig := new(big.Int).SetUint64(utils.Config.Chain.DepositChainID)
 	rpcClient := rpc.NewBeaconClient(cfg.BeaconNodeUrl, chainIDBig)
 	if err != nil {
-		logrus.Fatalf("new explorer lighthouse client error %v", err)
+		logrus.Fatalf("new indexer beacon client error %v", err)
 	}
 
 	go exporter.Start(rpcClient)
